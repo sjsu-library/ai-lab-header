@@ -1,0 +1,112 @@
+<html>
+<head>
+<head>
+<body>
+<div id="board">
+<div id="pt"></div>
+</div>
+
+
+<script type="text/javascript" src="https://d2jv02qf7xgjwx.cloudfront.net/sites/841/include/pts.min.js"></script>
+<script>
+
+// Source code licensed under Apache License 2.0.
+// Copyright © 2017 William Ngan. (https://github.com/williamngan/pts)
+
+window.demoDescription = "Create a gradient grid using Lab color space. The pointer position updates the lightness. With subtle wave-like animation.";
+
+Pts.quickStart( "#pt", "#0055A2" );
+
+//// Demo code starts (anonymous function wrapper is optional) ---
+
+(function() {
+
+  var grid = [];
+  var ratio;
+  var pairs = [];
+
+  // Lab max value range (100, 127, 127)
+  let cu = Color.lab( Color.maxValues("lab") );
+
+  function init() {
+    ratio = space.size.x/space.size.y;
+    grid = Create.gridCells( space.innerBound, 7, 5 );
+  }
+
+
+  space.add({
+
+
+    start: init,
+    resize: init,
+        start:( bound ) => {
+      let r = space.size.minValue().value*2;
+
+      // create 200 lines
+      for (let i=0; i<500; i++) {
+        let ln = new Group( Pt.make(2, r, true), Pt.make(2, -r, true) );
+        ln.moveBy( space.center ).rotate2D( i*Math.PI/200, space.center );
+        pairs.push(ln );
+      }
+    },
+
+
+
+    animate: (time, ftime) => {
+              for (let i=0, len=pairs.length; i<len; i++) {
+
+        // rotate each line by 0.1 degree and check collinearity with pointer
+        let ln = pairs[i];
+        ln.rotate2D( Const.one_degree/100, space.center );
+        let collinear = Line.collinear( ln[0], ln[1], space.pointer, 0.1);
+
+        if (collinear) {
+          form.stroke("#E5A823", 5).line(ln);
+
+        } else {
+          // if not collinear, color the line based on whether the pointer is on left or right side
+          let side = Line.sideOfPt2D( ln, space.pointer );
+          form.stroke( (side<0) ? "rgba(255,255,0,.1)" : "rgba(0,255,255,.1)",2 ).line( ln );
+        }
+        form.fillOnly("rgba(229, 168, 035,1").points( ln, 2);
+      }
+
+      // get LAB color string, given a point position
+      let color = (p) => {
+        let p1 = p.$divide(space.size);
+        let p2 = space.pointer.$divide(space.size);
+        let c1 = cu.$multiply( Pt.make( 4, 1 ).to( p2.x, p1.x-0.5, p1.y-0.5 ) );
+        return Color.LABtoRGB( c1 ).toString("rgb");
+      }
+
+      for (let i=0, len=grid.length; i<len; i++) {
+        grid[i][1].ceil();
+        let c = grid[i].interpolate( Num.cycle( (time+i*60)%1000000/1000 ) );
+        form.strokeOnly( color( c ), Math.min(space.size.y/80, space.size.x/80) ).rect( grid[i] );
+      }
+    let fontSize = Math.min(space.size.y/5-20, space.size.x/8-20);
+
+      form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[7], "S", "middle" );
+        form.fillOnly("#fff").font( fontSize ).alignText("center").textBox( grid[8], "J", "middle" );
+         form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[9], "S", "middle" );
+         form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[10], "U", "middle" );
+
+         form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[17], "A", "middle" );
+        form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[18], "I", "middle" );
+
+         form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[25], "L", "middle" );
+         form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[26], "A", "middle" );
+         form.fillOnly("#fff").font(fontSize).alignText("center").textBox( grid[27], "B", "middle" );
+
+    },
+
+  });
+
+  //// ----
+
+
+  space.bindMouse().bindTouch().play();
+
+})();
+</script>
+</body>
